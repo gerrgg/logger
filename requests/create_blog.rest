@@ -1,0 +1,9 @@
+POST http://localhost:3001/api/blogs
+content-type: application/json
+
+{
+  "title": "Harry: Life, Loss, and Love",
+  "author": "Jerry Jordan",
+  "url": "https://amazon.com",
+  "likes": 5
+}
