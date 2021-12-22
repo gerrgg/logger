@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "dotenv": "^10.0.0",
+    "jest": "^27.4.5",
     "nodemon": "^2.0.15"
   },
   "name": "logger",
@@ -8,7 +9,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "jest --verbose"
+  },
+  "jest": {
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
