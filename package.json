@@ -1,18 +1,18 @@
 {
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "dotenv": "^10.0.0",
     "jest": "^27.4.5",
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.15",
+    "supertest": "^6.1.6"
   },
   "name": "logger",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest --verbose",
-    "dev": "nodemon index.js"
-  },
-  "jest": {
-    "testEnvironment": "node"
+    "start": "cross-env NODE_ENV=production node index.js",
+    "test": "cross-env NODE_ENV=test jest --verbose --runInBand",
+    "dev": "cross-env NODE_ENV=development nodemon index.js"
   },
   "keywords": [],
   "author": "",
