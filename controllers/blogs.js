@@ -9,7 +9,7 @@ blogsRouter.get("/", async (request, response) => {
 blogsRouter.get("/:id", async (request, response) => {
   const blog = await Blog.findById(request.params.id);
 
-  blog ? response.json(blog) : response.status(400);
+  blog ? response.json(blog) : response.status(400).end();
 });
 
 blogsRouter.delete("/:id", async (request, response) => {
