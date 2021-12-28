@@ -13,14 +13,7 @@ const Blog = require("../models/blog");
 
 beforeEach(async () => {
   await Blog.deleteMany({});
-  let blogObject = new Blog(helper.initialBlogs[0]);
-  await blogObject.save();
-
-  blogObject = new Blog(helper.initialBlogs[1]);
-  await blogObject.save();
-
-  blogObject = new Blog(helper.initialBlogs[2]);
-  await blogObject.save();
+  await Blog.insertMany(helper.initialBlogs);
 });
 
 describe("getting blog posts", () => {
@@ -34,7 +27,7 @@ describe("getting blog posts", () => {
   test("there are three blogs", async () => {
     const response = await api.get("/api/blogs");
 
-    expect(response.body).toHaveLength(3);
+    expect(response.body).toHaveLength(helper.initialBlogs.length);
   });
 
   test("blogs are returned with an id", async () => {
@@ -91,8 +84,81 @@ describe("posting a blog", () => {
     };
 
     await api.post("/api/blogs").send(newBlog).expect(400);
+  });
+});
 
-    const response = await api.get("/api/blogs");
+describe("viewing a specific blog", () => {
+  test("succeeds with a valid id", async () => {
+    const blogsAtStart = await helper.blogsInDb();
+
+    const blogToView = blogsAtStart[0];
+
+    const resultBlog = await api
+      .get(`/api/blogs/${blogToView.id}`)
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+
+    const processedBlogToView = JSON.parse(JSON.stringify(blogToView));
+
+    expect(resultBlog.body).toEqual(processedBlogToView);
+  });
+
+  test("fails with statuscode 404 if note does not exist", async () => {
+    const validNonexistingId = await helper.nonExistingId();
+
+    await api.get(`/api/notes/${validNonexistingId}`).expect(404);
+  });
+});
+
+describe("deletion of a blog", () => {
+  test("succeeds with status code 204 if id is valid", async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToDelete = blogsAtStart[0];
+
+    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1);
+
+    const contents = blogsAtEnd.map((r) => r.title);
+
+    expect(contents).not.toContain(blogToDelete.title);
+  });
+});
+
+describe("updating a blog", () => {
+  test("liking a blog succeeds with status code 204 if id is valid", async () => {
+    const blogsAtStart = await helper.blogsInDb();
+
+    const updatedBlog = {
+      ...blogsAtStart[0],
+      likes: blogsAtStart[0].likes + 1,
+    };
+
+    await api
+      .put(`/api/blogs/${updatedBlog.id}`)
+      .send(updatedBlog)
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    expect(blogsAtEnd[0].likes).toBe(updatedBlog.likes);
+    expect(blogsAtEnd[0].likes).not.toBe(blogsAtStart[0].likes);
+  });
+
+  test("updating an invalid blog will return 404", async () => {
+    const invalid = helper.nonExistingId();
+
+    const blogsAtStart = await helper.blogsInDb();
+
+    const updatedBlog = {
+      ...blogsAtStart[0],
+      likes: blogsAtStart[0].likes + 1,
+    };
+
+    await api.put(`/api/blogs/${invalid}`).send(updatedBlog).expect(400);
   });
 });
 
