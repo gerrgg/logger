@@ -106,7 +106,7 @@ describe("viewing a specific blog", () => {
   test("fails with statuscode 404 if note does not exist", async () => {
     const validNonexistingId = await helper.nonExistingId();
 
-    await api.get(`/api/notes/${validNonexistingId}`).expect(404);
+    await api.get(`/api/blogs/${validNonexistingId}`).expect(404);
   });
 });
 

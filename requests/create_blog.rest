@@ -2,8 +2,9 @@ POST http://localhost:3001/api/blogs
 content-type: application/json
 
 {
-  "title": "Harry: Life, Loss, and Love",
+  "title": "Harry: Life, Loss, and HATE",
   "author": "Jerry Jordan",
   "url": "https://amazon.com",
-  "likes": 5
+  "likes": 5,
+  "userId": "61cd41fb7d998c971343ce1c"
 }
