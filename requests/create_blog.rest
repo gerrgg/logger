@@ -1,10 +1,10 @@
 POST http://localhost:3001/api/blogs
 content-type: application/json
+authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlNIUjNOVCIsImlkIjoiNjFjZGYxMWE5YjViZGE0YjE5ZmU2NWU0IiwiaWF0IjoxNjQwODg3ODgxfQ.w6PluLHWf8moIyuQ_AqvAE5h-CW36PQcZSOSGqTHq5Y
 
 {
   "title": "Harry: Life, Loss, and HATE",
   "author": "Jerry Jordan",
   "url": "https://amazon.com",
-  "likes": 5,
-  "userId": "61cd41fb7d998c971343ce1c"
+  "likes": 5
 }
