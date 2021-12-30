@@ -149,7 +149,7 @@ describe("updating a blog", () => {
   });
 
   test("updating an invalid blog will return 404", async () => {
-    const invalid = helper.nonExistingId();
+    const invalid = await helper.nonExistingId();
 
     const blogsAtStart = await helper.blogsInDb();
 
