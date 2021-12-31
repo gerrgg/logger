@@ -10,10 +10,28 @@ const app = require("../app");
 const api = supertest(app);
 
 const Blog = require("../models/blog");
+const User = require("../models/user");
+const bcrypt = require("bcrypt");
+
+const login = async () => {
+  const result = await api.post("/api/login").send({
+    username: "root",
+    password: "sekret",
+  });
+
+  return result;
+};
 
 beforeEach(async () => {
   await Blog.deleteMany({});
+  await User.deleteMany({});
+
   await Blog.insertMany(helper.initialBlogs);
+
+  const passwordHash = await bcrypt.hash("sekret", 10);
+  const user = new User({ username: "root", passwordHash });
+
+  await user.save();
 });
 
 describe("getting blog posts", () => {
@@ -46,8 +64,11 @@ describe("posting a blog", () => {
       likes: 1,
     };
 
+    const result = await login();
+
     await api
       .post("/api/blogs")
+      .set("Authorization", `bearer ${result.body.token}`)
       .send(newBlog)
       .expect(200)
       .expect("Content-Type", /application\/json/);
@@ -68,8 +89,11 @@ describe("posting a blog", () => {
       url: "https://anotherfakeurl2.com",
     };
 
+    const result = await login();
+
     const response = await api
       .post("/api/blogs")
+      .set("Authorization", `bearer ${result.body.token}`)
       .send(newBlog)
       .expect(200)
       .expect("Content-Type", /application\/json/);
@@ -78,12 +102,18 @@ describe("posting a blog", () => {
   });
 
   test("returns 400 if title and url is omitted", async () => {
+    const result = await login();
+
     const newBlog = {
       author: "Jim yo Jom doe",
       likes: 1,
     };
 
-    await api.post("/api/blogs").send(newBlog).expect(400);
+    await api
+      .post("/api/blogs")
+      .set("Authorization", `bearer ${result.body.token}`)
+      .send(newBlog)
+      .expect(400);
   });
 });
 
@@ -112,18 +142,47 @@ describe("viewing a specific blog", () => {
 
 describe("deletion of a blog", () => {
   test("succeeds with status code 204 if id is valid", async () => {
-    const blogsAtStart = await helper.blogsInDb();
-    const blogToDelete = blogsAtStart[0];
+    const newBlog = {
+      title: "Another damn title 5",
+      author: "Jim Bob Jom Hoe",
+      url: "https://anotherfakeurl2.com",
+    };
 
-    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+    const result = await login();
 
-    const blogsAtEnd = await helper.blogsInDb();
+    const savedBlog = await api
+      .post("/api/blogs")
+      .set("Authorization", `bearer ${result.body.token}`)
+      .send(newBlog)
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
 
-    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1);
+    await api
+      .delete(`/api/blogs/${savedBlog.body.id}`)
+      .set("Authorization", `bearer ${result.body.token}`)
+      .expect(204);
+  });
 
-    const contents = blogsAtEnd.map((r) => r.title);
+  test("delete returns 401 if token doesnt match user", async () => {
+    const newBlog = {
+      title: "Another damn title 5",
+      author: "Jim Bob Jom Hoe",
+      url: "https://anotherfakeurl2.com",
+    };
 
-    expect(contents).not.toContain(blogToDelete.title);
+    const result = await login();
+
+    const savedBlog = await api
+      .post("/api/blogs")
+      .set("Authorization", `bearer ${result.body.token}`)
+      .send(newBlog)
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+
+    await api
+      .delete(`/api/blogs/${savedBlog.body.id}`)
+      .set("Authorization", `bearer ${result.body.token.substring(1)}a}`)
+      .expect(401);
   });
 });
 

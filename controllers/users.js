@@ -5,6 +5,18 @@ const User = require("../models/user");
 usersRouter.post("/", async (request, response) => {
   const body = request.body;
 
+  if (!body.username || !body.password) {
+    response
+      .status(400)
+      .send({ error: `Username and/or password cannot blank` });
+  }
+
+  if (body.password.length < 3) {
+    response.status(400).send({
+      error: `User validation failed: password is shorter than the minimum allowed length (3).`,
+    });
+  }
+
   const saltRounds = 10;
   const passwordHash = await bcrypt.hash(body.password, saltRounds);
 

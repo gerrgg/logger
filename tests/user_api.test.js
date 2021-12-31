@@ -65,6 +65,45 @@ describe("when there is initially one user in db", () => {
     expect(usersAtEnd).toHaveLength(usersAtStart.length);
   });
 
+  test("username and password cannot be blank", async () => {
+    const result = await api
+      .post("/api/users")
+      .send({ name: "Superuser" })
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+
+    expect(result.body.error).toContain(
+      `Username and/or password cannot blank`
+    );
+
+    await api.post("/api/users").send({ username: "Superuser" }).expect(400);
+    await api.post("/api/users").send({ password: "Superuser" }).expect(400);
+  });
+
+  test("A username less than 3 characters long fails mongoose validation", async () => {
+    const creds = {
+      username: "g",
+      password: "unit",
+      name: "jabob",
+    };
+
+    const result = await api.post("/api/users").send(creds).expect(400);
+
+    expect(result.body.error).toContain(`User validation failed`);
+  });
+
+  test("A password less than 3 characters long fails mongoose validation", async () => {
+    const creds = {
+      username: "greg",
+      password: "a",
+      name: "jabob",
+    };
+
+    const result = await api.post("/api/users").send(creds).expect(400);
+
+    expect(result.body.error).toContain(`password is shorter`);
+  });
+
   afterAll(() => {
     mongoose.connection.close();
   });
