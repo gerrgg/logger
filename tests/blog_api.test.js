@@ -13,10 +13,10 @@ const Blog = require("../models/blog");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
 
-const login = async () => {
+const login = async (username = "root", password = "sekret") => {
   const result = await api.post("/api/login").send({
-    username: "root",
-    password: "sekret",
+    username,
+    password,
   });
 
   return result;
@@ -29,9 +29,12 @@ beforeEach(async () => {
   await Blog.insertMany(helper.initialBlogs);
 
   const passwordHash = await bcrypt.hash("sekret", 10);
-  const user = new User({ username: "root", passwordHash });
 
+  const user = new User({ username: "root", passwordHash });
   await user.save();
+
+  const user2 = new User({ username: "root2", passwordHash });
+  await user2.save();
 });
 
 describe("getting blog posts", () => {
@@ -187,24 +190,59 @@ describe("deletion of a blog", () => {
 });
 
 describe("updating a blog", () => {
-  test("liking a blog succeeds with status code 204 if id is valid", async () => {
-    const blogsAtStart = await helper.blogsInDb();
-
-    const updatedBlog = {
-      ...blogsAtStart[0],
-      likes: blogsAtStart[0].likes + 1,
+  test("unauthorized update returns code 401 ", async () => {
+    const newBlog = {
+      title: "Another damn title 5",
+      author: "Jim Bob Jom Hoe",
+      url: "https://anotherfakeurl2.com",
     };
 
-    await api
-      .put(`/api/blogs/${updatedBlog.id}`)
-      .send(updatedBlog)
+    const users = await helper.usersInDb();
+
+    const result = await login(users[0].username);
+
+    const savedBlog = await api
+      .post("/api/blogs")
+      .set("Authorization", `bearer ${result.body.token}`)
+      .send(newBlog)
       .expect(200)
       .expect("Content-Type", /application\/json/);
 
-    const blogsAtEnd = await helper.blogsInDb();
+    await api
+      .put(`/api/blogs/${savedBlog.body.id}`)
+      .set("Authorization", `bearer ${result.body.token}a`)
+      .expect(401);
+  });
 
-    expect(blogsAtEnd[0].likes).toBe(updatedBlog.likes);
-    expect(blogsAtEnd[0].likes).not.toBe(blogsAtStart[0].likes);
+  test("liking a blog succeeds with status code 200 if id is valid", async () => {
+    const newBlog = {
+      title: "Another damn title 5",
+      author: "Jim Bob Jom Hoe",
+      url: "https://anotherfakeurl2.com",
+    };
+
+    const users = await helper.usersInDb();
+
+    const result = await login(users[0].username);
+
+    const savedBlog = await api
+      .post("/api/blogs")
+      .set("Authorization", `bearer ${result.body.token}`)
+      .send(newBlog)
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+
+    const blog = savedBlog.body;
+
+    const updatedBlog = {
+      ...blog,
+      likes: blog.likes + 1,
+    };
+
+    await api
+      .put(`/api/blogs/${blog.id}`)
+      .set("Authorization", `bearer ${result.body.token}`)
+      .send(updatedBlog);
   });
 
   test("updating an invalid blog will return 404", async () => {

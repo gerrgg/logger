@@ -28,6 +28,7 @@ blogsRouter.delete("/:id", async (request, response) => {
 
 blogsRouter.put("/:id", async (request, response) => {
   const body = request.body;
+  const user = request.user;
 
   const blog = {
     likes: body.likes,
@@ -37,12 +38,15 @@ blogsRouter.put("/:id", async (request, response) => {
 
   if (!match) {
     response.status(400).end();
-  }
+  } else if (match.user.toString() !== user.id.toString()) {
+    response.status(401).json({ error: "token missing or invalid" });
+  } else {
+    const result = await Blog.findByIdAndUpdate(request.params.id, blog, {
+      new: true,
+    });
 
-  const result = await Blog.findByIdAndUpdate(request.params.id, blog, {
-    new: true,
-  });
-  response.json(result);
+    response.status(204).json(result);
+  }
 });
 
 blogsRouter.post("/", async (request, response) => {
@@ -50,7 +54,7 @@ blogsRouter.post("/", async (request, response) => {
   const user = await User.findById(request.user.id);
 
   if (!user) {
-    return response.status(401).json({ error: "token missing or invalid" });
+    response.status(401).json({ error: "token missing or invalid" });
   } else if (!body.title && !body.url) {
     response.status(400).end();
   }
