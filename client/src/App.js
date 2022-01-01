@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import styled from "styled-components";
+
 import Blog from "./components/Blog";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
@@ -6,20 +8,31 @@ import loginService from "./services/login";
 import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
 import Notification from "./components/Notification";
+import Toggleable from "./components/Togglable";
+
+const Wrapper = styled.div`
+  background: ${(props) => (props.theme === "dark" ? "#333" : "#f7f7f7")};
+  color: ${(props) => (props.theme === "dark" ? "#fff" : "#333")};
+  min-height: 100vh;
+`;
+
+const ContentArea = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 100px;
+  box-sizing: border-box;
+`;
+
+const Blogs = styled.div`
+  margin-top: 1rem;
+`;
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
-
-  const [username, setUsername] = useState("SHR3NT");
-  const [password, setPassword] = useState("password");
-
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
-  const [url, setUrl] = useState("");
+  const [user, setUser] = useState(null);
 
   const [errorMessage, setErrorMessage] = useState(null);
   const [isError, setIsError] = useState(false);
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
@@ -35,21 +48,14 @@ const App = () => {
     }
   }, []);
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
-
+  const login = async (credentials) => {
     try {
-      const user = await loginService.login({
-        username,
-        password,
-      });
+      const user = await loginService.login(credentials);
 
       window.localStorage.setItem("loggedBlogappUser", JSON.stringify(user));
 
       blogService.setToken(user.token);
       setUser(user);
-      setUsername("");
-      setPassword("");
     } catch (e) {
       setErrorMessage(e.response.data.error);
       setIsError(true);
@@ -62,19 +68,9 @@ const App = () => {
     setErrorMessage(`Successfully logged out`);
   };
 
-  const addBlog = async (e) => {
-    e.preventDefault();
-
+  const addBlog = async (newBlog) => {
     try {
-      const savedBlog = await blogService.create({
-        title,
-        author,
-        url,
-      });
-
-      setTitle("");
-      setAuthor("");
-      setUrl("");
+      const savedBlog = await blogService.create(newBlog);
 
       setErrorMessage(`${savedBlog.title} by ${savedBlog.author} added!`);
       setBlogs(blogs.concat(savedBlog));
@@ -85,46 +81,37 @@ const App = () => {
   };
 
   return (
-    <div>
-      <h2>blogs</h2>
+    <Wrapper theme={"dark"}>
+      <ContentArea>
+        <h2>blogs</h2>
 
-      <Notification
-        message={errorMessage}
-        setErrorMessage={setErrorMessage}
-        isError={isError}
-        setIsError={setIsError}
-      />
-
-      {user === null ? (
-        <LoginForm
-          handleLogin={handleLogin}
-          setUsername={setUsername}
-          setPassword={setPassword}
-          username={username}
-          password={password}
+        <Notification
+          message={errorMessage}
+          setErrorMessage={setErrorMessage}
+          isError={isError}
+          setIsError={setIsError}
         />
-      ) : (
-        <div>
-          <p>
-            {user.name} logged-in <button onClick={handleLogout}>logout</button>
-          </p>
-          <BlogForm
-            setTitle={setTitle}
-            title={title}
-            setAuthor={setAuthor}
-            author={author}
-            setUrl={setUrl}
-            url={url}
-            addBlog={addBlog}
-          />
-          <div style={{ marginTop: "1rem" }}>
-            {blogs.map((blog) => (
-              <Blog key={blog.id} blog={blog} />
-            ))}
+
+        {user === null ? (
+          <LoginForm login={login} />
+        ) : (
+          <div>
+            <p>
+              {user.name} logged-in{" "}
+              <button onClick={handleLogout}>logout</button>
+            </p>
+            <Toggleable buttonLabel={"Submit Blog"}>
+              <BlogForm addBlog={addBlog} />
+            </Toggleable>
+            <Blogs>
+              {blogs.map((blog) => (
+                <Blog key={blog.id} blog={blog} />
+              ))}
+            </Blogs>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </ContentArea>
+    </Wrapper>
   );
 };
 
