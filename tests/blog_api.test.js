@@ -190,63 +190,27 @@ describe("deletion of a blog", () => {
 });
 
 describe("updating a blog", () => {
-  test("unauthorized update returns code 401 ", async () => {
-    const newBlog = {
-      title: "Another damn title 5",
-      author: "Jim Bob Jom Hoe",
-      url: "https://anotherfakeurl2.com",
-    };
-
-    const users = await helper.usersInDb();
-
-    const result = await login(users[0].username);
-
-    const savedBlog = await api
-      .post("/api/blogs")
-      .set("Authorization", `bearer ${result.body.token}`)
-      .send(newBlog)
-      .expect(200)
-      .expect("Content-Type", /application\/json/);
-
-    await api
-      .put(`/api/blogs/${savedBlog.body.id}`)
-      .set("Authorization", `bearer ${result.body.token}a`)
-      .expect(401);
-  });
-
-  test("liking a blog succeeds with status code 200 if id is valid", async () => {
-    const newBlog = {
-      title: "Another damn title 5",
-      author: "Jim Bob Jom Hoe",
-      url: "https://anotherfakeurl2.com",
-    };
-
-    const users = await helper.usersInDb();
-
-    const result = await login(users[0].username);
-
-    const savedBlog = await api
-      .post("/api/blogs")
-      .set("Authorization", `bearer ${result.body.token}`)
-      .send(newBlog)
-      .expect(200)
-      .expect("Content-Type", /application\/json/);
-
-    const blog = savedBlog.body;
+  test("blogs can only be liked by logged in users", async () => {
+    const blogs = await helper.blogsInDb();
+    const result = await login();
 
     const updatedBlog = {
-      ...blog,
-      likes: blog.likes + 1,
+      ...blogs[0],
+      likes: blogs[0].likes + 1,
     };
 
+    await api.put(`/api/blogs/${updatedBlog.id}`).send(updatedBlog).expect(401);
+
     await api
-      .put(`/api/blogs/${blog.id}`)
+      .put(`/api/blogs/${updatedBlog.id}`)
       .set("Authorization", `bearer ${result.body.token}`)
-      .send(updatedBlog);
+      .send(updatedBlog)
+      .expect(204);
   });
 
-  test("updating an invalid blog will return 404", async () => {
+  test("updating an invalid blog as a logged in user will return 400", async () => {
     const invalid = await helper.nonExistingId();
+    const result = await login();
 
     const blogsAtStart = await helper.blogsInDb();
 
@@ -255,7 +219,11 @@ describe("updating a blog", () => {
       likes: blogsAtStart[0].likes + 1,
     };
 
-    await api.put(`/api/blogs/${invalid}`).send(updatedBlog).expect(400);
+    await api
+      .put(`/api/blogs/1`)
+      .send(updatedBlog)
+      .set("Authorization", `bearer ${result.body.token}`)
+      .expect(400);
   });
 });
 

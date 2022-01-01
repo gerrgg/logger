@@ -14,6 +14,7 @@ const Wrapper = styled.div`
   background: ${(props) => (props.theme === "dark" ? "#333" : "#f7f7f7")};
   color: ${(props) => (props.theme === "dark" ? "#fff" : "#333")};
   min-height: 100vh;
+  padding: 0 30px;
 `;
 
 const ContentArea = styled.div`
@@ -35,7 +36,9 @@ const App = () => {
   const [isError, setIsError] = useState(false);
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
+    blogService.getAll().then((blogs) => {
+      setBlogs(blogs.sort((a, b) => a.likes < b.likes));
+    });
   }, []);
 
   useEffect(() => {
@@ -80,6 +83,26 @@ const App = () => {
     }
   };
 
+  const updateBlog = async (id, update) => {
+    try {
+      await blogService.update(id, update);
+
+      const blog = blogs.find((b) => b.id === id);
+
+      const updatedBlog = { ...blog, likes: update.likes };
+
+      setErrorMessage(
+        `${updatedBlog.title} now has ${updatedBlog.likes} likes!`
+      );
+
+      setBlogs(blogs.map((blog) => (blog.id === id ? updatedBlog : blog)));
+    } catch (e) {
+      console.log(e);
+      setErrorMessage(e.response.data.error);
+      setIsError(true);
+    }
+  };
+
   return (
     <Wrapper theme={"dark"}>
       <ContentArea>
@@ -105,7 +128,7 @@ const App = () => {
             </Toggleable>
             <Blogs>
               {blogs.map((blog) => (
-                <Blog key={blog.id} blog={blog} />
+                <Blog key={blog.id} blog={blog} updateBlog={updateBlog} />
               ))}
             </Blogs>
           </div>

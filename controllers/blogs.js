@@ -34,12 +34,10 @@ blogsRouter.put("/:id", async (request, response) => {
     likes: body.likes,
   };
 
-  const match = await Blog.findById(request.params.id);
-
-  if (!match) {
-    response.status(400).end();
-  } else if (match.user.toString() !== user.id.toString()) {
-    response.status(401).json({ error: "token missing or invalid" });
+  if (!user) {
+    response
+      .status(401)
+      .json({ error: "You must be logged in to like a post" });
   } else {
     const result = await Blog.findByIdAndUpdate(request.params.id, blog, {
       new: true,
