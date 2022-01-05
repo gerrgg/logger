@@ -37,7 +37,7 @@ const App = () => {
 
   useEffect(() => {
     blogService.getAll().then((blogs) => {
-      setBlogs(blogs.sort((a, b) => a.likes < b.likes));
+      setBlogs(blogs);
     });
   }, []);
 
@@ -65,7 +65,7 @@ const App = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     window.localStorage.clear();
     setUser(null);
     setErrorMessage(`Successfully logged out`);
@@ -91,17 +91,34 @@ const App = () => {
 
       const updatedBlog = { ...blog, likes: update.likes };
 
-      setErrorMessage(
-        `${updatedBlog.title} now has ${updatedBlog.likes} likes!`
-      );
-
       setBlogs(blogs.map((blog) => (blog.id === id ? updatedBlog : blog)));
     } catch (e) {
       console.log(e);
+
+      if (e.response.data.error === "token expired") {
+        await handleLogout();
+      }
+
       setErrorMessage(e.response.data.error);
       setIsError(true);
     }
   };
+
+  const deleteBlog = async (blog) => {
+    console.log("click");
+    if (window.confirm(`Delete ${blog.title}? It has ${blog.likes} likes!!`)) {
+      try {
+        await blogService.remove(blog.id);
+
+        setBlogs(blogs.filter((b) => b.id !== blog.id));
+      } catch (e) {
+        setErrorMessage(e.response.data.error);
+        setIsError(true);
+      }
+    }
+  };
+
+  const sortedBlogs = blogs.sort((a, b) => a.likes < b.likes);
 
   return (
     <Wrapper theme={"dark"}>
@@ -120,15 +137,21 @@ const App = () => {
         ) : (
           <div>
             <p>
-              {user.name} logged-in{" "}
+              {user.username} logged-in{" "}
               <button onClick={handleLogout}>logout</button>
             </p>
             <Toggleable buttonLabel={"Submit Blog"}>
               <BlogForm addBlog={addBlog} />
             </Toggleable>
             <Blogs>
-              {blogs.map((blog) => (
-                <Blog key={blog.id} blog={blog} updateBlog={updateBlog} />
+              {sortedBlogs.map((blog) => (
+                <Blog
+                  key={blog.id}
+                  blog={blog}
+                  user={user}
+                  updateBlog={updateBlog}
+                  deleteBlog={deleteBlog}
+                />
               ))}
             </Blogs>
           </div>

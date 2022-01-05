@@ -160,10 +160,16 @@ describe("deletion of a blog", () => {
       .expect(200)
       .expect("Content-Type", /application\/json/);
 
+    const blogsBefore = await helper.blogsInDb();
+
     await api
       .delete(`/api/blogs/${savedBlog.body.id}`)
       .set("Authorization", `bearer ${result.body.token}`)
       .expect(204);
+
+    const blogsAfter = await helper.blogsInDb();
+
+    expect(blogsAfter.length).toBe(blogsBefore.length - 1);
   });
 
   test("delete returns 401 if token doesnt match user", async () => {
@@ -209,7 +215,6 @@ describe("updating a blog", () => {
   });
 
   test("updating an invalid blog as a logged in user will return 400", async () => {
-    const invalid = await helper.nonExistingId();
     const result = await login();
 
     const blogsAtStart = await helper.blogsInDb();

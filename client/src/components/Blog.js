@@ -4,6 +4,7 @@ import Togglable from "./Togglable";
 
 const Root = styled.div`
   margin-bottom: 1.5rem;
+  position: relative;
 `;
 
 const Flex = styled.div`
@@ -43,11 +44,24 @@ const LikeButton = styled.button`
   cursor: pointer;
 `;
 
+const DeleteButton = styled.button`
+  position: absolute;
+  top: -3px;
+  left: -20px;
+  display: block;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='red' d='M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.151 17.943l-4.143-4.102-4.117 4.159-1.833-1.833 4.104-4.157-4.162-4.119 1.833-1.833 4.155 4.102 4.106-4.16 1.849 1.849-4.1 4.141 4.157 4.104-1.849 1.849z'/%3E%3C/svg%3E")
+    no-repeat center/contain;
+  height: 15px;
+  width: 15px;
+  border: 0;
+  pointer: cursor;
+`;
+
 const HiddenContent = styled.div`
   display: ${(props) => (props.visible ? "block" : "none")};
 `;
 
-const Blog = ({ blog, updateBlog }) => {
+const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
   const [visible, setVisible] = useState(false);
 
   const toggleVisibility = () => {
@@ -65,8 +79,16 @@ const Blog = ({ blog, updateBlog }) => {
     updateBlog(blog.id, update);
   };
 
+  const handleDelete = (event) => {
+    event.preventDefault();
+    deleteBlog(blog.id);
+  };
+
   return (
     <Root>
+      {user.username === blog.user.username ? (
+        <DeleteButton onClick={handleDelete} />
+      ) : null}
       <Author>{blog.author}</Author>
       <Flex>
         <Title>{blog.title}</Title>
