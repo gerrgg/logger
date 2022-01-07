@@ -2,11 +2,6 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import Togglable from "./Togglable";
 
-const Root = styled.div`
-  margin-bottom: 1.5rem;
-  position: relative;
-`;
-
 const Flex = styled.div`
   display: flex;
 `;
@@ -16,6 +11,12 @@ const Title = styled.h2`
   color: lightblue;
   margin-bottom: 5px;
   margin-right: 15px;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+  &:hover {
+    color: aquamarine;
+    text-decoration: underline;
+  }
 `;
 
 const Author = styled.h2`
@@ -54,7 +55,16 @@ const DeleteButton = styled.button`
   height: 15px;
   width: 15px;
   border: 0;
-  pointer: cursor;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+  &:hover {
+    transform: scale(1.3);
+  }
+`;
+
+const Root = styled.div`
+  margin-bottom: 1.5rem;
+  position: relative;
 `;
 
 const HiddenContent = styled.div`
@@ -81,7 +91,7 @@ const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
 
   const handleDelete = (event) => {
     event.preventDefault();
-    deleteBlog(blog.id);
+    deleteBlog(blog);
   };
 
   return (
@@ -91,12 +101,7 @@ const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
       ) : null}
       <Author>{blog.author}</Author>
       <Flex>
-        <Title>{blog.title}</Title>
-        <div>
-          <button onClick={toggleVisibility}>
-            {visible ? "hide" : "show"}
-          </button>
-        </div>
+        <Title onClick={toggleVisibility}>{blog.title}</Title>
       </Flex>
       <HiddenContent visible={visible}>
         <p>

@@ -455,3 +455,180 @@ We create three separate instances of the component that all have their own sepa
 <img src="https://fullstackopen.com/static/c7355696281ca0c4d8d1e734a1d81a26/5a190/12e.png"/>
 
 The ref attribute is used for assigning a reference to each of the components in the variables togglable1, togglable2 and togglable3.
+
+## PropTypes
+
+The Togglable component assumes that it is given the text for the button via the buttonLabel prop. If we forget to define it to the component:
+
+The application works, but the browser renders a button that has no label text.
+
+We would like to enforce that when the Togglable component is used, the button label text prop must be given a value.
+
+The expected and required props of a component can be defined with the prop-types package. Let's install the package:
+
+```
+npm install prop-types
+```
+
+We can define the buttonLabel prop as a mandatory or required string-type prop as shown below:
+
+```
+import PropTypes from 'prop-types'
+
+const Togglable = React.forwardRef((props, ref) => {
+  // ..
+})
+
+Togglable.propTypes = {
+  buttonLabel: PropTypes.string.isRequired
+}
+```
+
+The application still works and nothing forces us to define props despite the PropTypes definitions. Mind you, it is extremely unprofessional to leave any red output to the browser console.
+
+Let's also define PropTypes to the LoginForm component:
+
+```
+import PropTypes from 'prop-types'
+
+const LoginForm = ({
+   handleSubmit,
+   handleUsernameChange,
+   handlePasswordChange,
+   username,
+   password
+  }) => {
+    // ...
+  }
+
+LoginForm.propTypes = {
+  handleSubmit: PropTypes.func.isRequired,
+  handleUsernameChange: PropTypes.func.isRequired,
+  handlePasswordChange: PropTypes.func.isRequired,
+  username: PropTypes.string.isRequired,
+  password: PropTypes.string.isRequired
+}
+```
+
+If the type of a passed prop is wrong, e.g. if we try to define the handleSubmit prop as a string, then this will result in the following warning:
+
+<img src="https://fullstackopen.com/static/ec732518823c5e2921d46285e5549bf3/5a190/16.png" />
+
+## ESlint
+
+In part 3 we configured the ESlint code style tool to the backend. Let's take ESlint to use in the frontend as well.
+
+Create-react-app has installed ESlint to the project by default, so all that's left for us to do is to define our desired configuration in the .eslintrc.js file.
+
+**NB: do not run the eslint --init command. It will install the latest version of ESlint that is not compatible with the configuration file created by create-react-app!**
+
+Next, we will start testing the frontend and in order to avoid undesired and irrelevant linter errors we will install the eslint-plugin-jest package:
+
+```
+npm install --save-dev eslint-plugin-jest
+```
+
+Let's create a .eslintrc.js file with the following contents:
+
+```
+/* eslint-env node */
+module.exports = {
+  "env": {
+      "browser": true,
+      "es6": true,
+      "jest/globals": true
+  },
+  "extends": [
+      "eslint:recommended",
+      "plugin:react/recommended"
+  ],
+  "parserOptions": {
+      "ecmaFeatures": {
+          "jsx": true
+      },
+      "ecmaVersion": 2018,
+      "sourceType": "module"
+  },
+  "plugins": [
+      "react", "jest"
+  ],
+  "rules": {
+      "indent": [
+          "error",
+          2
+      ],
+      "linebreak-style": [
+          "error",
+          "unix"
+      ],
+      "quotes": [
+          "error",
+          "single"
+      ],
+      "semi": [
+          "error",
+          "never"
+      ],
+      "eqeqeq": "error",
+      "no-trailing-spaces": "error",
+      "object-curly-spacing": [
+          "error", "always"
+      ],
+      "arrow-spacing": [
+          "error", { "before": true, "after": true }
+      ],
+      "no-console": 0,
+      "react/prop-types": 0
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}
+```
+
+Let's create .eslintignore file with the following contents to the repository root
+
+```
+node_modules
+build
+.eslintrc.js
+```
+
+Now the directories build and node_modules will be skipped when linting.
+
+Let us also create a npm script to run the lint:
+
+```
+{
+  // ...
+  {
+    "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "server": "json-server -p3001 db.json",
+    "eslint": "eslint ."  },
+  // ...
+}
+```
+
+Component Togglable causes a nasty looking warning Component definition is missing display name:
+
+<img src="https://fullstackopen.com/static/eccfbd107d663e40474efec70eb83ea4/5a190/25ea.png" />
+
+Fortunately this is easy to fix
+
+```
+import React, { useState, useImperativeHandle } from 'react'
+import PropTypes from 'prop-types'
+
+const Togglable = React.forwardRef((props, ref) => {
+  // ...
+})
+
+Togglable.displayName = 'Togglable'
+export default Togglable
+```
