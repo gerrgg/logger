@@ -95,15 +95,19 @@ const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
   };
 
   return (
-    <Root>
-      {user.username === blog.user.username ? (
-        <DeleteButton onClick={handleDelete} />
+    <Root className="blog">
+      {user && user.username === blog.user.username ? (
+        <DeleteButton label="delete" onClick={handleDelete} />
       ) : null}
       <Author>{blog.author}</Author>
       <Flex>
         <Title onClick={toggleVisibility}>{blog.title}</Title>
       </Flex>
-      <HiddenContent visible={visible}>
+      <HiddenContent
+        label="hidden-content"
+        className="hidden-content"
+        visible={visible}
+      >
         <p>
           <Link href={blog.url}>{blog.url}</Link>
         </p>
