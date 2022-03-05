@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
 import Blog from "./components/Blog";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
+
+import { setNotification } from "./reducers/notificationReducer";
 
 import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
@@ -32,8 +35,9 @@ const App = () => {
   const [blogs, setBlogs] = useState([]);
   const [user, setUser] = useState(null);
 
-  const [errorMessage, setErrorMessage] = useState(null);
   const [isError, setIsError] = useState(false);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     blogService.getAll().then((blogs) => {
@@ -59,8 +63,9 @@ const App = () => {
 
       blogService.setToken(user.token);
       setUser(user);
+      dispatch(setNotification(`Welcome, ${user.username}!`));
     } catch (e) {
-      setErrorMessage(e.response.data.error);
+      dispatch(setNotification(e.response.data.error));
       setIsError(true);
     }
   };
@@ -68,17 +73,17 @@ const App = () => {
   const handleLogout = async () => {
     window.localStorage.clear();
     setUser(null);
-    setErrorMessage(`Successfully logged out`);
+    setNotification(`Successfully logged out`);
   };
 
   const addBlog = async (newBlog) => {
     try {
       const savedBlog = await blogService.create(newBlog);
-
-      setErrorMessage(`${savedBlog.title} by ${savedBlog.author} added!`);
+      const notification = `${savedBlog.title} by ${savedBlog.author} added!`;
+      dispatch(setNotification(notification));
       setBlogs(blogs.concat(savedBlog));
     } catch (e) {
-      setErrorMessage(e.response.data.error);
+      dispatch(setNotification(e.response.data.error));
       setIsError(true);
     }
   };
@@ -93,14 +98,11 @@ const App = () => {
 
       setBlogs(blogs.map((blog) => (blog.id === id ? updatedBlog : blog)));
     } catch (e) {
-      console.log(e);
-
       if (e.response.data.error === "token expired") {
         await handleLogout();
       }
 
-      setErrorMessage(e.response.data.error);
-      setIsError(true);
+      dispatch(setNotification(e.response.data.error));
     }
   };
 
@@ -112,8 +114,7 @@ const App = () => {
 
         setBlogs(blogs.filter((b) => b.id !== blog.id));
       } catch (e) {
-        setErrorMessage(e.response.data.error);
-        setIsError(true);
+        dispatch(setNotification(e.response.data.error));
       }
     }
   };
@@ -125,12 +126,7 @@ const App = () => {
       <ContentArea>
         <h2>blogs</h2>
 
-        <Notification
-          message={errorMessage}
-          setErrorMessage={setErrorMessage}
-          isError={isError}
-          setIsError={setIsError}
-        />
+        <Notification />
 
         {user === null ? (
           <LoginForm login={login} />

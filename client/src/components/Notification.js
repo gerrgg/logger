@@ -1,7 +1,14 @@
 import React, { useEffect } from "react";
 
-const Notification = ({ message, setErrorMessage, isError, setIsError }) => {
-  let timer;
+import { useSelector, useDispatch } from "react-redux";
+import { setNotification } from "../reducers/notificationReducer";
+
+const Notification = ({ isError }) => {
+  const dispatch = useDispatch();
+
+  const notification = useSelector((state) => {
+    return state.notification;
+  });
 
   const style = {
     border: `5px solid ${isError ? "red" : "green"}`,
@@ -14,17 +21,17 @@ const Notification = ({ message, setErrorMessage, isError, setIsError }) => {
     width: "50vw",
   };
 
-  if (message === null) {
-    clearTimeout(timer);
-    return null;
-  } else {
-    timer = setTimeout(() => {
-      setErrorMessage(null);
-      setIsError(false);
-    }, 5000);
-  }
+  const clearNotificationAfter = () => {
+    clearInterval(window.t);
 
-  return <div style={style}>{message}</div>;
+    window.t = setTimeout(() => {
+      dispatch(setNotification(null));
+    }, 5000);
+  };
+
+  clearNotificationAfter();
+
+  return notification ? <div style={style}>{notification}</div> : null;
 };
 
 export default Notification;

@@ -1,6 +1,6 @@
 POST http://localhost:3001/api/blogs
 content-type: application/json
-authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlNIUjNOVCIsImlkIjoiNjFjZGYxMWE5YjViZGE0YjE5ZmU2NWU0IiwiaWF0IjoxNjQwODg3ODgxfQ.w6PluLHWf8moIyuQ_AqvAE5h-CW36PQcZSOSGqTHq5Y
+authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlNIUjNOVCIsImlkIjoiNjIyM2IzYjAzZjM3YzMzNTBhZjliOTkyIiwiaWF0IjoxNjQ2NTA3MDM5LCJleHAiOjE2NDY1MTA2Mzl9.54WYGkG9bpTdUfrnzGWfXxT4XfImwZsOi6gtz6npBFY
 
 {
   "title": "Harry: Life, Loss, and HATE",
