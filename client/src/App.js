@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
 import Blog from "./components/Blog";
@@ -12,6 +12,7 @@ import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
 import Notification from "./components/Notification";
 import Toggleable from "./components/Togglable";
+import { initializeBlogs, likeBlog } from "./reducers/blogReducer";
 
 const Wrapper = styled.div`
   background: ${(props) => (props.theme === "dark" ? "#333" : "#f7f7f7")};
@@ -32,7 +33,6 @@ const Blogs = styled.div`
 `;
 
 const App = () => {
-  const [blogs, setBlogs] = useState([]);
   const [user, setUser] = useState(null);
 
   const [isError, setIsError] = useState(false);
@@ -40,10 +40,8 @@ const App = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => {
-      setBlogs(blogs);
-    });
-  }, []);
+    dispatch(initializeBlogs());
+  }, [dispatch]);
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
@@ -76,50 +74,7 @@ const App = () => {
     setNotification(`Successfully logged out`);
   };
 
-  const addBlog = async (newBlog) => {
-    try {
-      const savedBlog = await blogService.create(newBlog);
-      const notification = `${savedBlog.title} by ${savedBlog.author} added!`;
-      dispatch(setNotification(notification));
-      setBlogs(blogs.concat(savedBlog));
-    } catch (e) {
-      dispatch(setNotification(e.response.data.error));
-      setIsError(true);
-    }
-  };
-
-  const updateBlog = async (id, update) => {
-    try {
-      await blogService.update(id, update);
-
-      const blog = blogs.find((b) => b.id === id);
-
-      const updatedBlog = { ...blog, likes: update.likes };
-
-      setBlogs(blogs.map((blog) => (blog.id === id ? updatedBlog : blog)));
-    } catch (e) {
-      if (e.response.data.error === "token expired") {
-        await handleLogout();
-      }
-
-      dispatch(setNotification(e.response.data.error));
-    }
-  };
-
-  const deleteBlog = async (blog) => {
-    console.log("click");
-    if (window.confirm(`Delete ${blog.title}? It has ${blog.likes} likes!!`)) {
-      try {
-        await blogService.remove(blog.id);
-
-        setBlogs(blogs.filter((b) => b.id !== blog.id));
-      } catch (e) {
-        dispatch(setNotification(e.response.data.error));
-      }
-    }
-  };
-
-  const sortedBlogs = blogs.sort((a, b) => a.likes < b.likes);
+  const sortedBlogs = useSelector((state) => state.blogs);
 
   return (
     <Wrapper theme={"dark"}>
@@ -137,17 +92,11 @@ const App = () => {
               <button onClick={handleLogout}>logout</button>
             </p>
             <Toggleable buttonLabel={"Submit Blog"}>
-              <BlogForm addBlog={addBlog} />
+              <BlogForm />
             </Toggleable>
             <Blogs>
               {sortedBlogs.map((blog) => (
-                <Blog
-                  key={blog.id}
-                  blog={blog}
-                  user={user}
-                  updateBlog={updateBlog}
-                  deleteBlog={deleteBlog}
-                />
+                <Blog key={blog.id} blog={blog} user={user} />
               ))}
             </Blogs>
           </div>

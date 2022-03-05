@@ -1,5 +1,8 @@
 import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
+import { removeBlog, likeBlog } from "../reducers/blogReducer";
+import { setNotification } from "../reducers/notificationReducer";
 import Togglable from "./Togglable";
 
 const Flex = styled.div`
@@ -71,7 +74,8 @@ const HiddenContent = styled.div`
   display: ${(props) => (props.visible ? "block" : "none")};
 `;
 
-const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
+const Blog = ({ blog, updateBlog, user }) => {
+  const dispatch = useDispatch();
   const [visible, setVisible] = useState(false);
 
   const toggleVisibility = () => {
@@ -80,13 +84,17 @@ const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
 
   const handleLike = (event) => {
     event.preventDefault();
+    dispatch(likeBlog(blog));
+  };
 
-    const update = {
-      ...blog,
-      likes: blog.likes + 1,
-    };
-
-    updateBlog(blog.id, update);
+  const deleteBlog = async (blog) => {
+    if (window.confirm(`Delete ${blog.title}? It has ${blog.likes} likes!!`)) {
+      dispatch(removeBlog(blog.id));
+      try {
+      } catch (e) {
+        dispatch(setNotification(e.response.data.error));
+      }
+    }
   };
 
   const handleDelete = (event) => {
